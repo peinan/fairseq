@@ -33,6 +33,11 @@ from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
 from omegaconf import DictConfig, OmegaConf
 
+try:
+    import wandb
+except ImportError:
+    wandb = None
+
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -156,6 +161,10 @@ def main(cfg: FairseqConfig) -> None:
         )
     train_meter.stop()
     logger.info("done training in {:.1f} seconds".format(train_meter.sum))
+
+    # A workaround to deal with the freezing after finish training
+    if wandb is not None:
+        wandb.finish()
 
 
 def should_stop_early(cfg: DictConfig, valid_loss: float) -> bool:

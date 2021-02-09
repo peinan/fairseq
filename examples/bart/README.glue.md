@@ -36,13 +36,13 @@ Example fine-tuning cmd for `STS-B` task
 DATA_PATH=/user/fairseq/STS-B-bin/
 BART_PATH=/user/models/bart/en/base/model.pt
 SAVE_DIR=/user/fairseq/STS-B-ft/
-WANDB_PJ=glue                      # hangs after finish learning
+WANDB_PJ=glue
 TENSORBOARD_DIR=/user/tensorboard  # Not working in multi-GPU training (#2357)
 ARCH=bart_base
 CUDA_VISIBLE_DEVICES=0,1,2,3
-MAX_SENTENCES=32                  # Batch size
-NUM_CLASSES=1                     # Regression task
-LR=2e-05                          # Peak LR for polynomial LR scheduler
+MAX_SENTENCES=32                   # Batch size
+NUM_CLASSES=1                      # Regression task
+LR=2e-05                           # Peak LR for polynomial LR scheduler
 TOTAL_NUM_UPDATES=1799
 WARMUP_UPDATES=107
 

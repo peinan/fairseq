@@ -16,7 +16,7 @@ python download_glue_data.py --data_dir glue_data --tasks all
 ### 2) Preprocess GLUE task data (same as RoBERTa):
 
 ```bash
-./examples/roberta/preprocess_GLUE_tasks.sh data/glue <glue_task_name>
+./examples/roberta/preprocess_GLUE_tasks.sh data/glue STS-B
 ```
 `glue_task_name` is one of the following:
 `{ALL, QQP, MNLI, QNLI, MRPC, RTE, STS-B, SST-2, CoLA}`

@@ -102,6 +102,7 @@ class BARTModel(TransformerModel):
             return_all_hiddens=return_all_hiddens,
         )
         eos: int = self.eos
+
         if classification_head_name is not None:
             sentence_representation = x[
                 src_tokens.eq(eos), :

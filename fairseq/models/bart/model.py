@@ -150,6 +150,9 @@ class BARTModel(TransformerModel):
             num_classes=num_classes,
             activation_fn=self.args.pooler_activation_fn,
             pooler_dropout=self.args.pooler_dropout,
+            do_spectral_norm=getattr(
+                self.args, "spectral_norm_classification_head", False
+            ),
         )
 
     def upgrade_state_dict_named(self, state_dict, name):
@@ -280,12 +283,16 @@ class BARTClassificationHead(nn.Module):
         num_classes,
         activation_fn,
         pooler_dropout,
+        do_spectral_norm=False,
     ):
         super().__init__()
         self.dense = nn.Linear(input_dim, inner_dim)
         self.activation_fn = utils.get_activation_fn(activation_fn)
         self.dropout = nn.Dropout(p=pooler_dropout)
         self.out_proj = nn.Linear(inner_dim, num_classes)
+
+        if do_spectral_norm:
+            self.out_proj = torch.nn.utils.spectral_norm(self.out_proj)
 
     def forward(self, features, **kwargs):
         x = features

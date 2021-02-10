@@ -75,7 +75,7 @@ class TranslationFromPretrainedBARTTask(TranslationTask):
     def __init__(self, args, src_dict, tgt_dict):
         super().__init__(args, src_dict, tgt_dict)
         for d in [src_dict, tgt_dict]:
-            d.add_symbol('<mask>')
+            d.add_symbol("<mask>")
 
         if self.args.langs is not None:
             self.langs = args.langs.split(',')
@@ -207,36 +207,36 @@ class TranslationFromPretrainedBARTTask(TranslationTask):
             upsample_primary=self.args.upsample_primary,
             left_pad_source=self.args.left_pad_source,
             left_pad_target=self.args.left_pad_target,
-            max_source_positions=getattr(self.args, 'max_source_positions', 1024),
-            max_target_positions=getattr(self.args, 'max_target_positions', 1024),
+            max_source_positions=getattr(self.args, "max_source_positions", 1024),
+            max_target_positions=getattr(self.args, "max_target_positions", 1024),
             load_alignments=self.args.load_alignments,
             prepend_bos=self.args.prepend_bos, 
             append_source_id=self.args.langs is not None
             )
         
     def build_generator(self, models, args):
-        if getattr(args, 'score_reference', False):
+        if getattr(args, "score_reference", False):
             from fairseq.sequence_scorer import SequenceScorer
             return SequenceScorer(
                 self.target_dictionary,
-                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index('[{}]'.format(self.args.target_lang))
+                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index("[{}]".format(self.args.target_lang))
             )
         else:
             from fairseq.sequence_generator import SequenceGenerator
             return SequenceGenerator(
                 models,
                 self.target_dictionary,
-                beam_size=getattr(args, 'beam', 5),
-                max_len_a=getattr(args, 'max_len_a', 0),
-                max_len_b=getattr(args, 'max_len_b', 200),
-                min_len=getattr(args, 'min_len', 1),
-                normalize_scores=(not getattr(args, 'unnormalized', False)),
-                len_penalty=getattr(args, 'lenpen', 1),
-                unk_penalty=getattr(args, 'unkpen', 0),
-                temperature=getattr(args, 'temperature', 1.),
-                match_source_len=getattr(args, 'match_source_len', False),
-                no_repeat_ngram_size=getattr(args, 'no_repeat_ngram_size', 0),
-                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index('[{}]'.format(self.args.target_lang))
+                beam_size=getattr(args, "beam", 5),
+                max_len_a=getattr(args, "max_len_a", 0),
+                max_len_b=getattr(args, "max_len_b", 200),
+                min_len=getattr(args, "min_len", 1),
+                normalize_scores=(not getattr(args, "unnormalized", False)),
+                len_penalty=getattr(args, "lenpen", 1),
+                unk_penalty=getattr(args, "unkpen", 0),
+                temperature=getattr(args, "temperature", 1.0),
+                match_source_len=getattr(args, "match_source_len", False),
+                no_repeat_ngram_size=getattr(args, "no_repeat_ngram_size", 0),
+                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index("[{}]".format(self.args.target_lang))
             )
 
     def build_dataset_for_inference(self, src_tokens, src_lengths, constraints=None):

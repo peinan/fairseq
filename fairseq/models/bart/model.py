@@ -6,12 +6,12 @@
 BART: Denoising Sequence-to-Sequence Pre-training for
 Natural Language Generation, Translation, and Comprehension
 """
+from typing import Optional
 
 import logging
 
 import torch
 import torch.nn as nn
-
 from fairseq import utils
 from fairseq.models import register_model, register_model_architecture
 from fairseq.models.transformer import TransformerModel
@@ -44,6 +44,8 @@ class BARTModel(TransformerModel):
         self.apply(init_bert_params)
 
         self.classification_heads = nn.ModuleDict()
+        if hasattr(self.encoder, "dictionary"):
+            self.eos: int = self.encoder.dictionary.eos()
 
     @staticmethod
     def add_args(parser):
@@ -92,10 +94,11 @@ class BARTModel(TransformerModel):
             features_only=features_only,
             **kwargs,
         )
+        eos: int = self.eos
 
         if classification_head_name is not None:
             sentence_representation = x[
-                src_tokens.eq(self.encoder.dictionary.eos()), :
+                src_tokens.eq(eos), :
             ].view(x.size(0), -1, x.size(-1))[:, -1, :]
             x = self.classification_heads[classification_head_name](
                 sentence_representation
@@ -109,6 +112,7 @@ class BARTModel(TransformerModel):
         checkpoint_file="model.pt",
         data_name_or_path=".",
         bpe="gpt2",
+        sample_break_mode="eos",
         **kwargs,
     ):
         from fairseq import hub_utils
@@ -120,6 +124,7 @@ class BARTModel(TransformerModel):
             archive_map=cls.hub_models(),
             bpe=bpe,
             load_checkpoint_heads=True,
+            sample_break_mode=sample_break_mode,
             **kwargs,
         )
         return BARTHubInterface(x["args"], x["task"], x["models"][0])

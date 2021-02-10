@@ -43,27 +43,64 @@ cp $DICT $DATASET_DIR/dict.tgt.txt
 ```
 
 ## Finetune
-Set `$BART` for `bart_base` or `bart_large`.  
-```shell
-fairseq-train $DATASET_DIR --arch $BART --restore-file $PRETRAINED_MODEL \
---save-dir $SAVE_MODEL_DIR --tensorboard-logdir $TENSORBOARD_DIR \
---task translation_from_pretrained_bart --source-lang src --target-lang tgt \
---criterion label_smoothed_cross_entropy --label-smoothing 0.2 --dataset-impl raw \
---optimizer adam --adam-eps 1e-06 --adam-betas '{0.9, 0.98}' --lr-scheduler polynomial_decay --lr 3e-05 --min-lr -1 \
---warmup-updates 2500 --total-num-update 40000 --dropout 0.3 --attention-dropout 0.1  --weight-decay 0.0 \
---max-tokens 1024 --update-freq 2 --save-interval -1 --no-epoch-checkpoints --seed 222 --log-format simple --log-interval 2 \
---reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler  --save-interval-updates 5000 \
---ddp-backend no_c10d --max-update 80000 \
---encoder-normalize-before --decoder-normalize-before --prepend-bos
+Set `$ARCH` for `bart_base` or `bart_large`.  
+```bash
+DATA_PATH=/user/fairseq/LP-T-sm-bin/
+BART_PATH=/user/models/bart/ja/base/model.pt
+SAVE_DIR=/user/fairseq/LP-T-sm-ft/
+WANDB_PJ=bart-ja-nlg
+ARCH=bart_base
+CUDA_VISIBLE_DEVICES=0,1,2,3
+MAX_EPOCH=2                        # number of epochs
+MAX_SENTENCES=32                   # Batch size
+NUM_CLASSES=1                      # Regression task
+LR=3e-05                           # Peak LR for polynomial LR scheduler
+TOTAL_NUM_UPDATES=40000
+WARMUP_UPDATES=2500
+
+fairseq-train $DATA_PATH \
+    --wandb-project $WANDB_PJ \
+    --restore-file $BART_PATH \
+    --save-dir $SAVE_DIR \
+    --max-tokens 1024 --update-freq 2 \
+    --task translation_from_pretrained_bart \
+    --source-lang src --target-lang tgt \
+    --criterion label_smoothed_cross_entropy \
+    --label-smoothing 0.2 \
+    --dataset-impl raw \
+    --optimizer adam \
+    --adam-eps 1e-06 --adam-betas '{0.9, 0.98}' --lr-scheduler polynomial_decay --lr $LR \
+    --total-num-update $TOTAL_NUM_UPDATES --warmup-updates $WARMUP_UPDATES \
+    --dropout 0.3 --attention-dropout 0.1  --weight-decay 0.0 \
+    --layernorm-embedding \
+    --share-all-embeddings \
+    --share-decoder-input-output-embed \
+    --reset-optimizer --reset-dataloader --reset-meters --reset-lr-scheduler \
+    --arch $ARCH \
+    --max-epoch $MAX_EPOCH \
+    --ddp-backend no_c10d --max-update 80000 \
+    --encoder-normalize-before --decoder-normalize-before --prepend-bos \
 ```
 
 ## Text Generation
-```shell
-fairseq-generate $DATASET_DIR --path $FINETUNED_MODEL --task translation_from_pretrained_bart \
---dataset-impl raw --gen-subset test -s src -t tgt --max-sentences 64 --prepend-bos > $RESULT
-cat $RESULT | grep -P "^H" | cut -f 3- | sed 's/<<unk>>/<unk>/g' | sed 's/▁//g' > ${RESULT}.pred
-cat $RESULT | grep -P "^S" | cut -f 2- | sed 's/<<unk>>/<unk>/g' | sed 's/▁//g' > ${RESULT}.src
-cat $RESULT | grep -P "^T" | cut -f 2- | sed 's/<<unk>>/<unk>/g' | sed 's/▁//g' > ${RESULT}.tgt
+```bash
+DATA_PATH=/user/fairseq/LP-T-sm-bin/
+BART_PATH=/user/models/bart/ja/base/model.pt
+SAVE_DIR=/user/fairseq/LP-T-sm-ft/
+GENERATED_PATH=/user/fairseq/LP-T-sm-bin/generated.txt
+
+fairseq-generate $DATA_PATH \
+    --path $SAVE_DIR/checkpoint_best.pt \
+    --task translation_from_pretrained_bart \
+    --dataset-impl raw \
+    --gen-subset test \
+    -s src -t tgt \
+    --max-sentences 64 \
+    --prepend-bos > $GENERATED_PATH
+
+cat $GENERATED_PATH | grep -P "^H" | cut -f 3- | sed 's/<<unk>>/<unk>/g' | sed 's/▁//g' > ${GENERATED_PATH}.pred
+cat $GENERATED_PATH | grep -P "^S" | cut -f 2- | sed 's/<<unk>>/<unk>/g' | sed 's/▁//g' > ${GENERATED_PATH}.src
+cat $GENERATED_PATH | grep -P "^T" | cut -f 2- | sed 's/<<unk>>/<unk>/g' | sed 's/▁//g' > ${GENERATED_PATH}.tgt
 ```
 
 ## Pretrain

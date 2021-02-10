@@ -57,7 +57,7 @@ class BARTModel(TransformerModel):
         parser.add_argument(
             "--pooler-activation-fn",
             choices=utils.get_available_activation_fns(),
-            help="activation function to use for pooler layer"
+            help="activation function to use for pooler layer",
         )
         parser.add_argument(
             "--spectral-norm-classification-head",
@@ -70,8 +70,13 @@ class BARTModel(TransformerModel):
         return {"self"}
 
     def forward(
-        self, src_tokens, src_lengths, prev_output_tokens,
-        features_only=False, classification_head_name=None, **kwargs
+        self,
+        src_tokens,
+        src_lengths,
+        prev_output_tokens,
+        features_only=False,
+        classification_head_name=None,
+        **kwargs
     ):
         if classification_head_name is not None:
             features_only = True
@@ -120,7 +125,7 @@ class BARTModel(TransformerModel):
         return BARTHubInterface(x["args"], x["task"], x["models"][0])
 
     def register_classification_head(
-            self, name, num_classes=None, inner_dim=None, **kwargs
+        self, name, num_classes=None, inner_dim=None, **kwargs
     ):
         """Register a classification head."""
         logger.info("Registering classification head: {0}".format(name))
@@ -158,7 +163,7 @@ class BARTModel(TransformerModel):
             if not k.startswith(prefix + "classification_heads."):
                 continue
 
-            head_name = k[len(prefix + "classification_heads."):].split(".")[0]
+            head_name = k[len(prefix + "classification_heads.") :].split(".")[0]
             num_classes = state_dict[
                 prefix + "classification_heads." + head_name + ".out_proj.weight"
             ].size(0)
@@ -234,19 +239,19 @@ class BARTModel(TransformerModel):
             state_dict["encoder.embed_tokens.weight"] = torch.cat(
                 [
                     state_dict["encoder.embed_tokens.weight"][
-                        :loaded_dict_size-1, :
+                        : loaded_dict_size - 1, :
                     ],
                     new_lang_embed_to_add,
-                    loaded_mask_token_embedding.unsqueeze(0)
+                    loaded_mask_token_embedding.unsqueeze(0),
                 ]
             )
             state_dict["decoder.embed_tokens.weight"] = torch.cat(
                 [
                     state_dict["decoder.embed_tokens.weight"][
-                        :loaded_dict_size-1, :
+                        : loaded_dict_size - 1, :
                     ],
                     new_lang_embed_to_add,
-                    loaded_mask_token_embedding.unsqueeze(0)
+                    loaded_mask_token_embedding.unsqueeze(0),
                 ]
             )
 
@@ -256,7 +261,7 @@ class BARTModel(TransformerModel):
             cur_state = self.classification_heads.state_dict()
             for k, v in cur_state.items():
                 if prefix + "classification_heads." + k not in state_dict:
-                    logger.info("Overwriting", prefix + "classification_heads." + k)
+                    logger.info("Overwriting " + prefix + "classification_heads." + k)
                     state_dict[prefix + "classification_heads." + k] = v
 
 
@@ -305,8 +310,8 @@ def bart_large_architecture(args):
     args.decoder_attention_heads = getattr(args, "decoder_attention_heads", 16)
     args.decoder_normalize_before = getattr(args, "decoder_normalize_before", True)
     args.decoder_learned_pos = getattr(args, "decoder_learned_pos", True)
-    args.attention_dropout = getattr(args, "attention_dropout", 0.)
-    args.relu_dropout = getattr(args, "relu_dropout", 0.)
+    args.attention_dropout = getattr(args, "attention_dropout", 0.0)
+    args.relu_dropout = getattr(args, "relu_dropout", 0.0)
     args.dropout = getattr(args, "dropout", 0.1)
     args.max_target_positions = getattr(args, "max_target_positions", 1024)
     args.max_source_positions = getattr(args, "max_source_positions", 1024)

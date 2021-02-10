@@ -212,14 +212,14 @@ class TranslationFromPretrainedBARTTask(TranslationTask):
             load_alignments=self.args.load_alignments,
             prepend_bos=self.args.prepend_bos, 
             append_source_id=self.args.langs is not None
-            )
-        
+        )
+
     def build_generator(self, models, args):
         if getattr(args, "score_reference", False):
             from fairseq.sequence_scorer import SequenceScorer
             return SequenceScorer(
                 self.target_dictionary,
-                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index("[{}]".format(self.args.target_lang))
+                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index("[{}]".format(self.args.target_lang)),
             )
         else:
             from fairseq.sequence_generator import SequenceGenerator
@@ -236,7 +236,7 @@ class TranslationFromPretrainedBARTTask(TranslationTask):
                 temperature=getattr(args, "temperature", 1.0),
                 match_source_len=getattr(args, "match_source_len", False),
                 no_repeat_ngram_size=getattr(args, "no_repeat_ngram_size", 0),
-                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index("[{}]".format(self.args.target_lang))
+                eos=self.tgt_dict.eos() if self.args.langs is None else self.tgt_dict.index("[{}]".format(self.args.target_lang)),
             )
 
     def build_dataset_for_inference(self, src_tokens, src_lengths, constraints=None):

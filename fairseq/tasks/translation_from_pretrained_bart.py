@@ -76,6 +76,7 @@ class TranslationFromPretrainedBARTTask(TranslationTask):
         super().__init__(args, src_dict, tgt_dict)
         for d in [src_dict, tgt_dict]:
             d.add_symbol("<mask>")
+        self.args = args
 
         if self.args.langs is not None:
             self.langs = args.langs.split(',')
@@ -214,7 +215,7 @@ class TranslationFromPretrainedBARTTask(TranslationTask):
             append_source_id=self.args.langs is not None
         )
 
-    def build_generator(self, models, args):
+    def build_generator(self, models, args, **unused):
         if getattr(args, "score_reference", False):
             from fairseq.sequence_scorer import SequenceScorer
             return SequenceScorer(
